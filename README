@@ -1,0 +1,41 @@
+h1. Envoy
+
+This is meant to be a simple script to help open an ssh tunnel to act as a socks5 proxy on an Amazon EC2 instance.
+
+h2. Usage
+
+Here's a peek of how to use the script...
+
+<pre>
+  envoy [-k SSH_KEY] [-u SSH_USER] [-h SSH_HOST] [-p SSH_PORT] [-l LOCAL_PROXY_PORT] [-s]
+</pre>
+
+Default values used if the options are not passed are as follows...
+
+SSH_KEY: ~/.ssh/id_rsa
+SSH_USER: ec2-user
+SSH_HOST: localhost
+* Yes, that is localhost on purpose, so at least pass this option!
+SSH_PORT: 22
+LOCAL_PROXY_PORT: 1080
+
+The command used to open the ssh tunnel is this...
+
+<pre>
+  ssh -N -D LOCAL_PROXY_PORT -i SSH_KEY SSH_USER@SSH_HOST -p SSH_PORT &
+</pre>
+
+To close an open tunnel, use the '-s' flag
+
+<pre>
+  envoy -s
+</pre>
+
+h2. Current Roadmap
+
+What does the future hold for this script? Here's a few things in the near...
+
+- Local config file to avoid CLI passing of consistent information.
+- Verifying process is running before trying to kill it when stopping execution.
+- Use of words alongside CLI flags.
+- {start|stop|status} options for a more usable command interface.
