@@ -1,0 +1,45 @@
+#!/bin/sh
+
+local_port=1080
+ssh_key=~/.ssh/id_rsa
+ssh_user=ec2-user
+ssh_host=localhost
+ssh_port=22
+
+# command line options
+while getopts k:u:d:p:l:sh OPTION
+do
+  case ${OPTION} in
+    k)  ssh_key=${OPTARG};;
+    u)  ssh_user=${OPTARG};;
+    d)  ssh_host=${OPTARG};;
+    p)  ssh_port=${OPTARG};;
+    l)  local_port=${OPTARG};;
+    s)  ssh_pid=`cat /tmp/envoy.pid`
+        echo "Closing envoy tunnel (pid $ssh_pid)..."
+        kill $ssh_pid
+        rm /tmp/envoy.pid
+        echo "Done!"
+        exit 0;;
+    h)  echo "Usage: $0 [-k SSH_KEY] [-u SSH_USER] [-h SSH_HOST] [-p SSH_PORT] [-l LOCAL_PROXY_PORT] [-s]"
+        echo "\nDefault values..."
+        echo "SSH_KEY: $ssh_key"
+        echo "SSH_USER: $ssh_user"
+        echo "SSH_HOST: $ssh_host"
+        echo "\tyes, that is localhost on purpose, so at least pass this option!"
+        echo "SSH_PORT: $ssh_port"
+        echo "LOCAL_PROXY_PORT: $local_port"
+        echo "\nThe command to open the ssh tunnel is this..."
+        echo "\tssh -N -D LOCAL_PROXY_PORT -i SSH_KEY SSH_USER@SSH_HOST -p SSH_PORT &"
+        echo "\nTo close an open tunnel, use the '-s' flag"
+        echo "\tenvoy -s"
+        exit 1;;
+  esac
+done
+
+echo "Opening ssh tunnel..."
+ssh -N -D $local_port -i $ssh_key $ssh_user@$ssh_host -p $ssh_port &
+ssh_pid=$!
+echo $ssh_pid > /tmp/envoy.pid
+echo "Tunnel open (pid $ssh_pid)"
+exit 0
