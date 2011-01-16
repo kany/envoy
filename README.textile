@@ -7,7 +7,7 @@ h2. Usage
 Here's a peek of how to use the script...
 
 <pre>
-  envoy [-k SSH_KEY] [-u SSH_USER] [-h SSH_HOST] [-p SSH_PORT] [-l LOCAL_PROXY_PORT] [-s]
+  envoy [-k SSH_KEY] [-u SSH_USER] [-d SSH_HOST] [-p SSH_PORT] [-l LOCAL_PROXY_PORT] [-s]
 </pre>
 
 Default values used if the options are not passed are as follows...

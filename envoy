@@ -21,7 +21,7 @@ do
         rm /tmp/envoy.pid
         echo "Done!"
         exit 0;;
-    h)  echo "Usage: $0 [-k SSH_KEY] [-u SSH_USER] [-h SSH_HOST] [-p SSH_PORT] [-l LOCAL_PROXY_PORT] [-s]"
+    h)  echo "Usage: $0 [-k SSH_KEY] [-u SSH_USER] [-d SSH_HOST] [-p SSH_PORT] [-l LOCAL_PROXY_PORT] [-s]"
         echo "\nDefault values..."
         echo "SSH_KEY: $ssh_key"
         echo "SSH_USER: $ssh_user"
