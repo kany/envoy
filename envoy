@@ -2,7 +2,7 @@
 
 local_port=1080
 ssh_key=~/.ssh/id_rsa
-ssh_user=ec2-user
+ssh_user=ubuntu
 ssh_host=localhost
 ssh_port=22
 

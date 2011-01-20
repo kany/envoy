@@ -13,7 +13,7 @@ Here's a peek of how to use the script...
 Default values used if the options are not passed are as follows...
 
 SSH_KEY: ~/.ssh/id_rsa
-SSH_USER: ec2-user
+SSH_USER: ubuntu
 SSH_HOST: localhost (Yes, that is localhost on purpose, so at least pass this option!)
 SSH_PORT: 22
 LOCAL_PROXY_PORT: 1080
