@@ -38,3 +38,4 @@ What does the future hold for this script? Here's a few things in the near...
 - Verifying process is running before trying to kill it when stopping execution.
 - Use of words alongside CLI flags.
 - {start|stop|status} options for a more usable command interface.
+- Give the option for socks5 || http(s) proxy || both
