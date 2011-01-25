@@ -1,6 +1,6 @@
 #!/bin/sh
 
-local_port=1080
+local_port=0
 ssh_key=~/.ssh/id_rsa
 ssh_user=ubuntu
 ssh_host=localhost
@@ -30,11 +30,13 @@ do
         echo "SSH_HOST: $ssh_host"
         echo "\tyes, that is localhost on purpose, so at least pass this option!"
         echo "SSH_PORT: $ssh_port"
-        echo "LOCAL_PROXY_PORT: $local_port"
         echo "PROXY_TYPE: $proxy_type"
+        echo "\nUnless the LOCAL_PROXY_PORT is received, it uses a default port based on the proxy type..."
+        echo "\tsocks5: 1080"
+        echo "\thttp: 8080"
         echo "\nIf PROXY_TYPE=socks5, the command to open the ssh tunnel is this..."
         echo "\tssh -N -D LOCAL_PROXY_PORT -i SSH_KEY SSH_USER@SSH_HOST -p SSH_PORT &"
-        echo "\nIf PROXY_TYPE=http, it is assumed squid is used on the server being connected to."
+        echo "\nIf PROXY_TYPE=http, it is assumed squid is running on 3128 on the remote server."
         echo "The command to open the ssh tunnel is this..."
         echo "\tssh -N -L LOCAL_PROXY_PORT:localhost:3128 -i SSH_KEY SSH_USER@SSH_HOST -p SSH_PORT &"
         echo "\nTo close an open tunnel, use the '-s' flag"
@@ -42,6 +44,15 @@ do
         exit 1;;
   esac
 done
+
+# if the local_port is still 0, set a default value
+if [ "$local_port" -eq "0" ]; then
+  if [ "$proxy_type" == "http" ]; then
+    local_port=8080
+  else
+    local_port=1080
+  fi
+fi
 
 echo "Opening ssh tunnel..."
 if [ "$proxy_type" == "http" ]; then

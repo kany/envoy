@@ -16,8 +16,12 @@ SSH_KEY: ~/.ssh/id_rsa
 SSH_USER: ubuntu
 SSH_HOST: localhost (Yes, that is localhost on purpose, so at least pass this option!)
 SSH_PORT: 22
-LOCAL_PROXY_PORT: 1080
 PROXY_TYPE: socks5
+
+Unless the LOCAL_PROXY_PORT is received, it uses a default port based on the proxy type...
+
+socks5: 1080
+http: 8080
 
 If PROXY_TYPE=socks5, the command used to open the ssh tunnel is this...
 
