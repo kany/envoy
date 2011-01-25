@@ -7,7 +7,7 @@ h2. Usage
 Here's a peek of how to use the script...
 
 <pre>
-  envoy [-k SSH_KEY] [-u SSH_USER] [-d SSH_HOST] [-p SSH_PORT] [-l LOCAL_PROXY_PORT] [-s]
+  envoy [-k SSH_KEY] [-u SSH_USER] [-d SSH_HOST] [-p SSH_PORT] [-l LOCAL_PROXY_PORT] [-t PROXY_TYPE] [-s]
 </pre>
 
 Default values used if the options are not passed are as follows...
@@ -17,11 +17,18 @@ SSH_USER: ubuntu
 SSH_HOST: localhost (Yes, that is localhost on purpose, so at least pass this option!)
 SSH_PORT: 22
 LOCAL_PROXY_PORT: 1080
+PROXY_TYPE: socks5
 
-The command used to open the ssh tunnel is this...
+If PROXY_TYPE=socks5, the command used to open the ssh tunnel is this...
 
 <pre>
   ssh -N -D LOCAL_PROXY_PORT -i SSH_KEY SSH_USER@SSH_HOST -p SSH_PORT &
+</pre>
+
+If PROXY_TYPE=http, it is assumed squid is running on 3128 on the remote server. The command to open the ssh tunnel is this...
+
+<pre>
+  ssh -N -L LOCAL_PROXY_PORT:localhost:3128 -i SSH_KEY SSH_USER@SSH_HOST -p SSH_PORT &
 </pre>
 
 To close an open tunnel, use the '-s' flag
@@ -38,4 +45,4 @@ What does the future hold for this script? Here's a few things in the near...
 - Verifying process is running before trying to kill it when stopping execution.
 - Use of words alongside CLI flags.
 - {start|stop|status} options for a more usable command interface.
-- Give the option for socks5 || http(s) proxy || both
+- Give the option for socks5 && http(s) proxy
