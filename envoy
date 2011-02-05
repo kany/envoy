@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# shell variables
 local_port=0
 ssh_key=~/.ssh/id_rsa
 ssh_user=ubuntu
@@ -7,60 +8,94 @@ ssh_host=localhost
 ssh_port=22
 proxy_type=socks5
 
+# Set the local port
+set_local_port() {
+  # if the local_port is still 0, set a default value
+  if [ "$local_port" -eq "0" ]; then
+    if [ "$proxy_type" == "http" ]; then
+      local_port=8080
+    else
+      local_port=1080
+    fi
+  fi
+}
+
+# Open http proxy
+open_http_proxy() {
+  ssh -N -L $local_port:localhost:3128 -i $ssh_key $ssh_user@$ssh_host -p $ssh_port &
+}
+
+# Open socks5 proxy
+open_socks5_proxy() {
+  ssh -N -D $local_port -i $ssh_key $ssh_user@$ssh_host -p $ssh_port &
+}
+
+# Save the proxy tunnel pid
+store_proxy_pid() {
+  ssh_pid=$!
+  echo $ssh_pid > /tmp/envoy.pid
+}
+
+# Open the proxy tunnel
+open_proxy() {
+  echo "Opening ssh tunnel..."
+  set_local_port
+  if [ "$proxy_type" == "http" ]; then
+    open_http_proxy
+  else
+    open_socks5_proxy
+  fi
+  store_proxy_pid
+  echo "Tunnel open (pid $ssh_pid)"
+  exit 0
+}
+
+# Close the proxy tunnel
+close_proxy() {
+  ssh_pid=`cat /tmp/envoy.pid`
+  echo "Closing envoy tunnel (pid $ssh_pid)..."
+  kill $ssh_pid
+  rm /tmp/envoy.pid
+  echo "Done!"
+  exit 0
+}
+
+# Print usage instructions
+usage() {
+  echo "Usage: $0 [-k SSH_KEY] [-u SSH_USER] [-d SSH_HOST] [-p SSH_PORT] [-l LOCAL_PROXY_PORT] [-t PROXY_TYPE] [-s]"
+  echo "\nDefault values..."
+  echo "SSH_KEY: $ssh_key"
+  echo "SSH_USER: $ssh_user"
+  echo "SSH_HOST: $ssh_host"
+  echo "\tyes, that is localhost on purpose, so at least pass this option!"
+  echo "SSH_PORT: $ssh_port"
+  echo "PROXY_TYPE: $proxy_type"
+  echo "\nUnless the LOCAL_PROXY_PORT is received, it uses a default port based on the proxy type..."
+  echo "\tsocks5: 1080"
+  echo "\thttp: 8080"
+  echo "\nIf PROXY_TYPE=socks5, the command used to open the ssh tunnel is this..."
+  echo "\tssh -N -D LOCAL_PROXY_PORT -i SSH_KEY SSH_USER@SSH_HOST -p SSH_PORT &"
+  echo "\nIf PROXY_TYPE=http, it is assumed squid is running on 3128 on the remote server."
+  echo "The command used to open the ssh tunnel is this..."
+  echo "\tssh -N -L LOCAL_PROXY_PORT:localhost:3128 -i SSH_KEY SSH_USER@SSH_HOST -p SSH_PORT &"
+  echo "\nTo close an open tunnel, use the '-s' flag"
+  echo "\tenvoy -s"
+  exit 1
+}
+
 # command line options
 while getopts k:u:d:p:l:t:sh OPTION
 do
   case ${OPTION} in
-    k)  ssh_key=${OPTARG};;
-    u)  ssh_user=${OPTARG};;
-    d)  ssh_host=${OPTARG};;
-    p)  ssh_port=${OPTARG};;
-    l)  local_port=${OPTARG};;
-    t)  proxy_type=${OPTARG};;
-    s)  ssh_pid=`cat /tmp/envoy.pid`
-        echo "Closing envoy tunnel (pid $ssh_pid)..."
-        kill $ssh_pid
-        rm /tmp/envoy.pid
-        echo "Done!"
-        exit 0;;
-    h)  echo "Usage: $0 [-k SSH_KEY] [-u SSH_USER] [-d SSH_HOST] [-p SSH_PORT] [-l LOCAL_PROXY_PORT] [-t PROXY_TYPE] [-s]"
-        echo "\nDefault values..."
-        echo "SSH_KEY: $ssh_key"
-        echo "SSH_USER: $ssh_user"
-        echo "SSH_HOST: $ssh_host"
-        echo "\tyes, that is localhost on purpose, so at least pass this option!"
-        echo "SSH_PORT: $ssh_port"
-        echo "PROXY_TYPE: $proxy_type"
-        echo "\nUnless the LOCAL_PROXY_PORT is received, it uses a default port based on the proxy type..."
-        echo "\tsocks5: 1080"
-        echo "\thttp: 8080"
-        echo "\nIf PROXY_TYPE=socks5, the command used to open the ssh tunnel is this..."
-        echo "\tssh -N -D LOCAL_PROXY_PORT -i SSH_KEY SSH_USER@SSH_HOST -p SSH_PORT &"
-        echo "\nIf PROXY_TYPE=http, it is assumed squid is running on 3128 on the remote server."
-        echo "The command used to open the ssh tunnel is this..."
-        echo "\tssh -N -L LOCAL_PROXY_PORT:localhost:3128 -i SSH_KEY SSH_USER@SSH_HOST -p SSH_PORT &"
-        echo "\nTo close an open tunnel, use the '-s' flag"
-        echo "\tenvoy -s"
-        exit 1;;
+    k) ssh_key=${OPTARG} ;;
+    u) ssh_user=${OPTARG} ;;
+    d) ssh_host=${OPTARG} ;;
+    p) ssh_port=${OPTARG} ;;
+    l) local_port=${OPTARG} ;;
+    t) proxy_type=${OPTARG} ;;
+    s) close_proxy ;;
+    h) usage ;;
   esac
 done
 
-# if the local_port is still 0, set a default value
-if [ "$local_port" -eq "0" ]; then
-  if [ "$proxy_type" == "http" ]; then
-    local_port=8080
-  else
-    local_port=1080
-  fi
-fi
-
-echo "Opening ssh tunnel..."
-if [ "$proxy_type" == "http" ]; then
-  ssh -N -L $local_port:localhost:3128 -i $ssh_key $ssh_user@$ssh_host -p $ssh_port &
-else
-  ssh -N -D $local_port -i $ssh_key $ssh_user@$ssh_host -p $ssh_port &
-fi
-ssh_pid=$!
-echo $ssh_pid > /tmp/envoy.pid
-echo "Tunnel open (pid $ssh_pid)"
-exit 0
+open_proxy
