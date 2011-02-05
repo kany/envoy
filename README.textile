@@ -1,6 +1,8 @@
 h1. Envoy
 
-This is meant to be a simple script to help open an ssh tunnel to act as a socks5 proxy on an Amazon EC2 instance.
+This was originally designed to be a simple script to help open an ssh tunnel to act as a socks5 proxy on an Amazon EC2 instance.
+
+However, the script is certainly not limited to Amazon EC2. It can be used to open a tunnel to any server that accepts an ssh connection!
 
 h2. Usage
 
