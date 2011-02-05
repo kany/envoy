@@ -22,11 +22,13 @@ set_local_port() {
 
 # Open http proxy
 open_http_proxy() {
+  echo "Opening http proxy on port $local_port..."
   ssh -N -L $local_port:localhost:3128 -i $ssh_key $ssh_user@$ssh_host -p $ssh_port &
 }
 
 # Open socks5 proxy
 open_socks5_proxy() {
+  echo "Opening socks5 proxy on port $local_port..."
   ssh -N -D $local_port -i $ssh_key $ssh_user@$ssh_host -p $ssh_port &
 }
 
@@ -38,7 +40,6 @@ store_proxy_pid() {
 
 # Open the proxy tunnel
 open_proxy() {
-  echo "Opening ssh tunnel..."
   set_local_port
   if [ "$proxy_type" == "http" ]; then
     open_http_proxy
@@ -46,14 +47,14 @@ open_proxy() {
     open_socks5_proxy
   fi
   store_proxy_pid
-  echo "Tunnel open (pid $ssh_pid)"
+  echo "Done (pid $ssh_pid)"
   exit 0
 }
 
 # Close the proxy tunnel
 close_proxy() {
   ssh_pid=`cat /tmp/envoy.pid`
-  echo "Closing envoy tunnel (pid $ssh_pid)..."
+  echo "Closing proxy (pid $ssh_pid)..."
   kill $ssh_pid
   rm /tmp/envoy.pid
   echo "Done!"
@@ -62,29 +63,41 @@ close_proxy() {
 
 # Print usage instructions
 usage() {
-  echo "Usage: $0 [-k SSH_KEY] [-u SSH_USER] [-d SSH_HOST] [-p SSH_PORT] [-l LOCAL_PROXY_PORT] [-t PROXY_TYPE] [-s]"
-  echo "\nDefault values..."
-  echo "SSH_KEY: $ssh_key"
-  echo "SSH_USER: $ssh_user"
-  echo "SSH_HOST: $ssh_host"
-  echo "\tyes, that is localhost on purpose, so at least pass this option!"
-  echo "SSH_PORT: $ssh_port"
-  echo "PROXY_TYPE: $proxy_type"
-  echo "\nUnless the LOCAL_PROXY_PORT is received, it uses a default port based on the proxy type..."
-  echo "\tsocks5: 1080"
-  echo "\thttp: 8080"
-  echo "\nIf PROXY_TYPE=socks5, the command used to open the ssh tunnel is this..."
-  echo "\tssh -N -D LOCAL_PROXY_PORT -i SSH_KEY SSH_USER@SSH_HOST -p SSH_PORT &"
-  echo "\nIf PROXY_TYPE=http, it is assumed squid is running on 3128 on the remote server."
-  echo "The command used to open the ssh tunnel is this..."
-  echo "\tssh -N -L LOCAL_PROXY_PORT:localhost:3128 -i SSH_KEY SSH_USER@SSH_HOST -p SSH_PORT &"
-  echo "\nTo close an open tunnel, use the '-s' flag"
-  echo "\tenvoy -s"
+  echo "$0 [-h] [-k SSH_KEY] [-u SSH_USER] [-d SSH_HOST] [-p SSH_PORT] [-l LOCAL_PROXY_PORT] [-t PROXY_TYPE] {open|close|help}"
+}
+
+# Print help instructions
+full_help() {
+  usage
+  echo "\nCommand options...\n"
+  echo "open\t\t\tOpen a proxy using optional flags"
+  echo "close\t\t\tClose a running proxy"
+  echo "help\t\t\tShow this help message"
+  echo "\nFlags...\n"
+  echo "-k SSH_KEY\t\tPrivate key (default: $ssh_key)"
+  echo "-u SSH_USER\t\tSSH username (default: $ssh_user)"
+  echo "-d SSH_HOST\t\tDomain name or IP connecting to (default: $ssh_host)"
+  echo "\t\t\tYes, that is localhost on purpose, so at least pass this option!"
+  echo "-p SSH_PORT\t\tSSH port on server (default: $ssh_port)"
+  echo "-t PROXY_TYPE\t\tProxy type (default: $proxy_type)"
+  echo "-l LOCAL_PROXY_PORT\tLocal proxy port (default based on PROXY_TYPE)"
+  echo "\t\t\tsocks5: 1080"
+  echo "\t\t\thttp: 8080"
+  echo "-h\t\t\tBasic usage info"
   exit 1
 }
 
-# command line options
-while getopts k:u:d:p:l:t:sh OPTION
+# Invalid option
+invalid_option() {
+  if [ $# -gt 0 ]; then
+    echo "'$1' is an invalid option!\n"
+  fi
+  usage
+  exit 1
+}
+
+# Flags
+while getopts k:u:d:p:l:t:h OPTION
 do
   case ${OPTION} in
     k) ssh_key=${OPTARG} ;;
@@ -93,9 +106,18 @@ do
     p) ssh_port=${OPTARG} ;;
     l) local_port=${OPTARG} ;;
     t) proxy_type=${OPTARG} ;;
-    s) close_proxy ;;
-    h) usage ;;
+    h)
+      usage
+      exit 1
+      ;;
   esac
 done
+shift $((OPTIND - 1))
 
-open_proxy
+# Execution
+case "$1" in
+  'open')   open_proxy ;;
+  'close')  close_proxy ;;
+  'help')   full_help ;;
+  *)        invalid_option $1 ;;
+esac
