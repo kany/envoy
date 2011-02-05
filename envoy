@@ -7,6 +7,7 @@ ssh_user=ubuntu
 ssh_host=localhost
 ssh_port=22
 proxy_type=socks5
+pid_file=/tmp/envoy.pid
 
 # Set the local port
 set_local_port() {
@@ -35,7 +36,7 @@ open_socks5_proxy() {
 # Save the proxy tunnel pid
 store_proxy_pid() {
   ssh_pid=$!
-  echo $ssh_pid > /tmp/envoy.pid
+  echo $ssh_pid > $pid_file
 }
 
 # Open the proxy tunnel
@@ -53,11 +54,16 @@ open_proxy() {
 
 # Close the proxy tunnel
 close_proxy() {
-  ssh_pid=`cat /tmp/envoy.pid`
-  echo "Closing proxy (pid $ssh_pid)..."
-  kill $ssh_pid
-  rm /tmp/envoy.pid
-  echo "Done!"
+  if [ -f $pid_file ]; then
+    ssh_pid=`cat $pid_file`
+    echo "Closing proxy (pid $ssh_pid)..."
+    kill $ssh_pid
+    rm $pid_file
+    echo "Done!"
+  else
+    echo "File not found: $pid_file"
+    echo "There does not appear to be an open proxy..."
+  fi
   exit 0
 }
 

@@ -34,7 +34,6 @@ h2. Current Roadmap
 What does the future hold for this script? Here's a few things in the near...
 
 - Local config file to avoid CLI passing of consistent information.
-- Verifying process is running before trying to kill it when stopping execution.
 
 Beyond the near?
 
