@@ -13,7 +13,7 @@ pid_file=/tmp/envoy.pid
 set_local_port() {
   # if the local_port is still 0, set a default value
   if [ "$local_port" -eq "0" ]; then
-    if [ "$proxy_type" == "http" ]; then
+    if [ "$proxy_type" = "http" ]; then
       local_port=8080
     else
       local_port=1080
@@ -42,7 +42,7 @@ store_proxy_pid() {
 # Open the proxy tunnel
 open_proxy() {
   set_local_port
-  if [ "$proxy_type" == "http" ]; then
+  if [ "$proxy_type" = "http" ]; then
     open_http_proxy
   else
     open_socks5_proxy
